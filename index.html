@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاكي سوبر نينتندو ويب | SNES Web</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/gh/ethanaobrien/emulatorjs@main/data/loader.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>SNES <span>WEB ULTRA</span></h1>
+            <p>ارفع ملف اللعبة (ROM) بصيغة .smc أو .sfc</p>
+        </header>
+
+        <div class="emulator-frame">
+            <div id="emulator-screen">
+                <div class="placeholder-text">
+                    
+
+[Image of SNES Controller]
+
+                    <br>
+                    بانتظار ملف اللعبة...
+                </div>
+            </div>
+            <div class="scanlines"></div> </div>
+
+        <div class="controls-area">
+            <label for="rom-upload" class="upload-btn">
+                <span class="icon">📂</span> اختر ملف اللعبة (ROM)
+            </label>
+            <input type="file" id="rom-upload" accept=".smc, .sfc, .zip">
+        </div>
+
+        <footer>
+            <p>يدعم ملفات Super Nintendo الأصلية</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
