@@ -39,7 +39,28 @@
             <p>يدعم ملفات Super Nintendo الأصلية</p>
         </footer>
     </div>
+<div class="main-layout">
+    <div class="emulator-frame">
+        <div id="emulator-screen">
+            <canvas id="snes-canvas"></canvas> <div class="placeholder-text">بانتظار ملف اللعبة...</div>
+        </div>
+        <div class="scanlines"></div>
+    </div>
 
+    <div id="debugger-panel" class="panel hidden">
+        <h3>📝 سجلات المعالج (CPU Registers)</h3>
+        <pre id="cpu-registers-output">PC: 0000 | A: 00 | X: 00 | Y: 00 | SP: 00</pre>
+
+        <h3>🗂️ نقاط التوقف (Breakpoints)</h3>
+        <input type="text" id="breakpoint-address" placeholder="عنوان الذاكرة (مثال: 0800)">
+        <button id="add-breakpoint-btn" class="debug-btn">إضافة نقطة توقف</button>
+        <div id="breakpoints-list"></div>
+
+        <h3>🕹️ أدوات التحكم</h3>
+        <button id="debug-step-btn" class="debug-btn">خطوة واحدة (Step)</button>
+        <button id="debug-run-btn" class="debug-btn">تشغيل/إيقاف مؤقت</button>
+    </div>
+</div>
     <script src="script.js"></script>
 </body>
 </html>
