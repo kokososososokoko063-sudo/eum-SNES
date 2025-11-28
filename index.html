@@ -3,64 +3,410 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>محاكي سوبر نينتندو ويب | SNES Web</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/gh/ethanaobrien/emulatorjs@main/data/loader.js"></script>
+    <title>محاكي سوبر نينتندو ويب مع مصحح الأخطاء | SNES Web Debugger</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #ff0055;
+            --secondary-color: #00e5ff;
+            --bg-color: #121212;
+            --frame-color: #1f1f1f;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1250px;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            color: #fff;
+            text-shadow: 2px 2px var(--primary-color), -2px -2px var(--secondary-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* --- تصميم لوحة العرض الرئيسية --- */
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin: 30px 0;
+        }
+
+        /* --- شاشة المحاكي --- */
+        .emulator-frame {
+            background: #000;
+            border: 4px solid var(--frame-color);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+            position: relative;
+            aspect-ratio: 4/3;
+            flex-grow: 1;
+            max-width: 75%;
+            overflow: hidden;
+        }
+
+        #emulator-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* يجب أن تحتوي هذه الحاوية على عنصر Canvas أو iframe المحاكي */
+        }
+        
+        .placeholder-text {
+            color: #555;
+            font-size: 1.2rem;
+            line-height: 2;
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+
+        /* تأثير خطوط التلفاز القديم (Scanlines) */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* --- لوحة Debugger --- */
+        #debugger-panel {
+            background-color: var(--frame-color);
+            padding: 15px;
+            border-radius: 10px;
+            width: 350px;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+            border: 1px solid var(--primary-color);
+            font-family: 'Press Start 2P', cursive; /* خط رجعي للتصحيح */
+            font-size: 0.7rem;
+        }
+
+        #debugger-panel h3 {
+            color: var(--secondary-color);
+            border-bottom: 1px dashed #333;
+            padding-bottom: 5px;
+            margin-top: 15px;
+            font-size: 0.8rem;
+        }
+
+        #cpu-registers-output {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #ff9900; /* لون برتقالي للسجلات */
+        }
+
+        /* --- أدوات التحكم والتصحيح --- */
+        .controls-area {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, var(--primary-color), #ff5e00);
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--primary-color);
+        }
+        
+        /* أزرار Debugger */
+        .debug-btn {
+            background-color: var(--secondary-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+            margin-left: 5px;
+            transition: opacity 0.2s;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+        }
+
+        .debug-btn:hover {
+            opacity: 0.8;
+        }
+        
+        #breakpoint-address {
+            background: #282828;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px;
+            margin-top: 5px;
+            width: 150px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
 
     <div class="container">
-        <header>
-            <h1>SNES <span>WEB ULTRA</span></h1>
-            <p>ارفع ملف اللعبة (ROM) بصيغة .smc أو .sfc</p>
-        </header>
-
-        <div class="emulator-frame">
-            <div id="emulator-screen">
-                <div class="placeholder-text">
-                    
-
-[Image of SNES Controller]
-
-                    <br>
-                    بانتظار ملف اللعبة...
-                </div>
-            </div>
-            <div class="scanlines"></div> </div>
+        <h1>SNES <span>DEBUGGER</span> HUB</h1>
 
         <div class="controls-area">
             <label for="rom-upload" class="upload-btn">
-                <span class="icon">📂</span> اختر ملف اللعبة (ROM)
+                <span class="icon">📂</span> اختر ملف الـ ROM (.smc, .sfc)
             </label>
             <input type="file" id="rom-upload" accept=".smc, .sfc, .zip">
         </div>
 
+        <div class="main-layout">
+            <div class="emulator-frame">
+                <div id="emulator-screen">
+                    <div class="placeholder-text">
+                        
+
+[Image of SNES Controller]
+
+                        <br>
+                        الرجاء رفع ملف الـ ROM لبدء المحاكاة...
+                    </div>
+                </div>
+                <div class="scanlines"></div>
+            </div>
+
+            <div id="debugger-panel" class="hidden">
+                <h2>لوحة التصحيح</h2>
+                
+                <h3>📝 سجلات المعالج (CPU Registers)</h3>
+                <pre id="cpu-registers-output">PC: FFFF | A: 00 | X: 00 | Y: 00 | SP: 00</pre>
+
+                <h3>🕹️ أدوات التحكم</h3>
+                <button id="debug-run-btn" class="debug-btn">تشغيل (Run)</button>
+                <button id="debug-step-btn" class="debug-btn">خطوة واحدة (Step)</button>
+                
+                <h3>🗂️ نقاط التوقف (Breakpoints)</h3>
+                <input type="text" id="breakpoint-address" placeholder="العنوان (مثال: 8000)" maxlength="4">
+                <button id="add-breakpoint-btn" class="debug-btn">إضافة</button>
+                <div id="breakpoints-list"></div>
+            </div>
+        </div>
+        
         <footer>
-            <p>يدعم ملفات Super Nintendo الأصلية</p>
+            <p style="text-align: center; font-size: 0.8rem; color: #555;">تم البناء باستخدام WebAssembly ونواة SNES مُحسّنة.</p>
         </footer>
     </div>
-<div class="main-layout">
-    <div class="emulator-frame">
-        <div id="emulator-screen">
-            <canvas id="snes-canvas"></canvas> <div class="placeholder-text">بانتظار ملف اللعبة...</div>
-        </div>
-        <div class="scanlines"></div>
-    </div>
+    
+    <script src="https://cdn.jsdelivr.net/gh/ethanaobrien/emulatorjs@main/data/loader.js"></script>
 
-    <div id="debugger-panel" class="panel hidden">
-        <h3>📝 سجلات المعالج (CPU Registers)</h3>
-        <pre id="cpu-registers-output">PC: 0000 | A: 00 | X: 00 | Y: 00 | SP: 00</pre>
+    <script>
+        // //////////////////////////////////////////////////////
+        // المتغيرات الأساسية
+        // //////////////////////////////////////////////////////
+        let snesEmulatorInstance = null; // سيتم استبدالها بكائن المحاكي الفعلي
+        let isRunning = false;
+        const breakpoints = new Set();
+        const placeholderText = document.querySelector('.placeholder-text');
+        const debuggerPanel = document.getElementById('debugger-panel');
+        const cpuRegistersOutput = document.getElementById('cpu-registers-output');
+        const debugRunBtn = document.getElementById('debug-run-btn');
+        const debugStepBtn = document.getElementById('debug-step-btn');
 
-        <h3>🗂️ نقاط التوقف (Breakpoints)</h3>
-        <input type="text" id="breakpoint-address" placeholder="عنوان الذاكرة (مثال: 0800)">
-        <button id="add-breakpoint-btn" class="debug-btn">إضافة نقطة توقف</button>
-        <div id="breakpoints-list"></div>
+        // //////////////////////////////////////////////////////
+        // 1. منطق تحميل الـ ROM وبدء المحاكي
+        // //////////////////////////////////////////////////////
+        document.getElementById('rom-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        <h3>🕹️ أدوات التحكم</h3>
-        <button id="debug-step-btn" class="debug-btn">خطوة واحدة (Step)</button>
-        <button id="debug-run-btn" class="debug-btn">تشغيل/إيقاف مؤقت</button>
-    </div>
-</div>
-    <script src="script.js"></script>
+            // قراءة الملف الثنائي
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const romData = e.target.result;
+                startEmulator(file, romData);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function startEmulator(file, romData) {
+            placeholderText.style.display = 'none';
+            debuggerPanel.classList.remove('hidden');
+            
+            // إنشاء Blob URL للملف المرفوع لتمريره إلى EmulatorJS
+            const blob = new Blob([new Uint8Array(romData)], { type: 'application/octet-stream' });
+            const gameUrl = URL.createObjectURL(blob);
+            
+            // إعدادات EmulatorJS (التي تستدعي نواة Snes9x)
+            window.EJS_player = '#emulator-screen';
+            window.EJS_core = 'snes'; 
+            window.EJS_gameUrl = gameUrl;
+            window.EJS_gameName = file.name.replace(/\.[^/.]+$/, "");
+            window.EJS_pathtodata = 'https://cdn.jsdelivr.net/gh/ethanaobrien/emulatorjs@main/data/';
+
+            // *****************************************************************
+            // 🚨 نقطة التضمين الحاسمة:
+            // هنا يجب أن يتم تحميل وتشغيل مكتبة النواة القوية (مثل js-snes9x)
+            // إذا كنت تستخدم EmulatorJS، فإنها ستقوم بتشغيل نفسها
+            // ولكن للحصول على دالة snes.getRegisters()، ستحتاج إلى نواة تدعم ذلك صراحة
+            // *****************************************************************
+            
+            // تهيئة واجهة Debugger
+            snesEmulatorInstance = {
+                // دوال وهمية لمحاكاة استجابة Debugger (يجب استبدالها بالدوال الحقيقية للنواة)
+                getRegisters: () => ({ 
+                    PC: Math.floor(Math.random() * 0xFFFF), 
+                    A: Math.floor(Math.random() * 0xFF), 
+                    X: Math.floor(Math.random() * 0xFF), 
+                    Y: Math.floor(Math.random() * 0xFF), 
+                    SP: Math.floor(Math.random() * 0xFF) 
+                }),
+                step: () => console.log('Step executed (Placeholder)'),
+                run: () => console.log('Run called'),
+                pause: () => console.log('Pause called')
+            };
+
+            // بدء المحاكاة في وضع التشغيل (أو الإيقاف المؤقت إذا أردت بدء Debugging)
+            updateRegisters(); // تحديث أولي
+            runEmulatorLoop();
+        }
+
+        // //////////////////////////////////////////////////////
+        // 2. منطق Debugger والتحكم
+        // //////////////////////////////////////////////////////
+
+        function updateRegisters() {
+            if (!snesEmulatorInstance || !snesEmulatorInstance.getRegisters) return;
+            
+            // في مشروع حقيقي، ستقرأ السجلات من نواة المحاكي
+            const regs = snesEmulatorInstance.getRegisters(); 
+            
+            cpuRegistersOutput.textContent = 
+                `PC: ${regs.PC.toString(16).toUpperCase().padStart(4, '0')} | ` +
+                `A: ${regs.A.toString(16).toUpperCase().padStart(2, '0')} | ` +
+                `X: ${regs.X.toString(16).toUpperCase().padStart(2, '0')} | ` +
+                `Y: ${regs.Y.toString(16).toUpperCase().padStart(2, '0')} | ` +
+                `SP: ${regs.SP.toString(16).toUpperCase().padStart(2, '0')}`;
+
+            // فحص نقاط التوقف (يتم تنفيذه في حلقة المحاكاة)
+            if (isRunning && breakpoints.has(regs.PC)) {
+                // تم الوصول إلى نقطة توقف
+                isRunning = false;
+                snesEmulatorInstance.pause();
+                debugRunBtn.textContent = 'تشغيل (Run)';
+                alert(`توقف عند نقطة توقف: 0x${regs.PC.toString(16).toUpperCase()}`);
+            }
+        }
+
+        // حلقة المحاكاة (وهمية هنا)
+        function runEmulatorLoop() {
+            if (isRunning) {
+                updateRegisters();
+                // هنا يجب أن يتم تنفيذ الأمر التالي في المحاكي الحقيقي
+            }
+            // محاكاة التحديث الدوري للسجلات
+            requestAnimationFrame(runEmulatorLoop);
+        }
+
+        // 2.1 تشغيل/إيقاف مؤقت (Run/Pause)
+        debugRunBtn.addEventListener('click', () => {
+            if (!snesEmulatorInstance) return;
+
+            isRunning = !isRunning;
+            if (isRunning) {
+                snesEmulatorInstance.run();
+                debugRunBtn.textContent = 'إيقاف مؤقت (Pause)';
+            } else {
+                snesEmulatorInstance.pause();
+                debugRunBtn.textContent = 'تشغيل (Run)';
+            }
+        });
+
+        // 2.2 التنفيذ خطوة واحدة (Step)
+        debugStepBtn.addEventListener('click', () => {
+            if (!snesEmulatorInstance) return;
+            if (isRunning) {
+                // إذا كان قيد التشغيل، أوقفه قبل الخطوة الواحدة
+                isRunning = false;
+                snesEmulatorInstance.pause();
+                debugRunBtn.textContent = 'تشغيل (Run)';
+            }
+            snesEmulatorInstance.step(); // تنفيذ الأمر التالي
+            updateRegisters();
+        });
+
+        // 2.3 إضافة نقطة توقف (Breakpoint)
+        document.getElementById('add-breakpoint-btn').addEventListener('click', () => {
+            const input = document.getElementById('breakpoint-address');
+            const addressString = input.value.trim();
+            
+            // تحويل العنوان من نص (سداسي عشري) إلى رقم
+            const address = parseInt(addressString, 16);
+            
+            if (isNaN(address) || address < 0 || address > 0xFFFF) {
+                alert('الرجاء إدخال عنوان ذاكرة صحيح (سداسي عشري من 0000 إلى FFFF).');
+                return;
+            }
+
+            breakpoints.add(address);
+            input.value = '';
+            renderBreakpoints();
+        });
+
+        // عرض نقاط التوقف
+        function renderBreakpoints() {
+            const listDiv = document.getElementById('breakpoints-list');
+            listDiv.innerHTML = '';
+            
+            breakpoints.forEach(addr => {
+                const p = document.createElement('p');
+                p.textContent = `🚨 0x${addr.toString(16).toUpperCase().padStart(4, '0')}`;
+                p.className = 'breakpoint-item';
+                listDiv.appendChild(p);
+            });
+        }
+    </script>
 </body>
 </html>
