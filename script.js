@@ -54,3 +54,65 @@ function startEmulator(file) {
     // قراءة الملف كمصفوفة بايتات
     reader.readAsArrayBuffer(file);
 }
+
+main-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start; /* محاذاة العناصر للأعلى */
+    width: 90%;
+    max-width: 1200px; /* زيادة العرض لاستيعاب اللوحة الجانبية */
+    margin: 30px auto;
+}
+
+.emulator-frame {
+    flex-grow: 1; /* الشاشة تأخذ المساحة المتاحة */
+    max-width: 75%;
+}
+
+#debugger-panel {
+    background-color: var(--frame-color);
+    padding: 15px;
+    border-radius: 10px;
+    width: 250px;
+    min-height: 400px;
+    box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+    border: 1px solid var(--primary-color);
+    font-family: monospace; /* خط أحادي للعرض التقني */
+}
+
+#debugger-panel h3 {
+    color: var(--secondary-color);
+    border-bottom: 1px dashed #333;
+    padding-bottom: 5px;
+    margin-top: 15px;
+    font-size: 1rem;
+}
+
+#cpu-registers-output {
+    background: #000;
+    padding: 10px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 0.85rem;
+}
+
+.debug-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: background-color 0.2s;
+}
+
+.debug-btn:hover {
+    background-color: #ff3377;
+}
+
+.hidden {
+    /* لإخفاء لوحة التصحيح قبل تحميل اللعبة */
+    display: none;
+}
